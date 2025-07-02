@@ -30,7 +30,7 @@ passport.use(
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID as string,
     clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
-    callbackURL: process.env.GITHUB_CALLBACK_URL! as string,
+    callbackURL: process.env.GITHUB_CALLBACK_URL as string,
     scope: ['user:email']
 }, async (accessToken:string, refreshToken: string, profile:GitHubProfile, done:any) => {
     try{
@@ -62,6 +62,7 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       callbackURL: process.env.GOOGLE_CALLBACK_URL as string,
+      scope: ['user:email']
     },
     async (accessToken: string, refreshToken: string, profile: GoogleProfile, done: any) => {
       try {

@@ -13,20 +13,24 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);  
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     // Handle login logic here
     console.log('Login with:', { email, password });
   };
 
   const handleGoogleLogin = () => {
-    // Handle Google login
+    setIsLoading(true);
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`;
     console.log('Login with Google');
   };
 
   const handleGithubLogin = () => {
-    // Handle GitHub login
+    setIsLoading(true);
+    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/github`;
     console.log('Login with GitHub');
   };
 
@@ -147,7 +151,7 @@ export default function LoginPage() {
 
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}
-              <Link href="/signup" className="text-primary hover:underline font-medium">
+              <Link href="/auth/signup" className="text-primary hover:underline font-medium">
                 Sign up
               </Link>
             </div>

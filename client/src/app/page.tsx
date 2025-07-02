@@ -27,7 +27,7 @@ export default function Home() {
               <span className="text-xl font-bold gradient-text">CodeJudge</span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/login">
+              <Link href="auth/login">
                 <Button variant="ghost" className="text-sm font-medium">
                   Login
                 </Button>
