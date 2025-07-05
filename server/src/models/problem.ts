@@ -17,12 +17,11 @@ interface ProblemAttributes {
   memoryLimit: number;
   acceptedSubmissions: number;
   totalSubmissions: number;
-  isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-interface ProblemCreationAttributes extends Optional<ProblemAttributes, 'id' | 'acceptedSubmissions' | 'totalSubmissions' | 'isActive' | 'createdAt' | 'updatedAt'> {}
+interface ProblemCreationAttributes extends Optional<ProblemAttributes, 'id' | 'acceptedSubmissions' | 'totalSubmissions' | 'createdAt' | 'updatedAt'> {}
 
 class Problem extends Model<ProblemAttributes, ProblemCreationAttributes> implements ProblemAttributes {
   public id!: string;
@@ -40,7 +39,6 @@ class Problem extends Model<ProblemAttributes, ProblemCreationAttributes> implem
   public memoryLimit!: number;
   public acceptedSubmissions!: number;
   public totalSubmissions!: number;
-  public isActive!: boolean;
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -120,11 +118,6 @@ Problem.init(
       validate: {
         min: 0,
       },
-    },
-    isActive: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: true,
     },
   },
   {
