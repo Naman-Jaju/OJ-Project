@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useQuestionsStore } from '@/store/questionStore';
+import ProblemsDashboard from '@/components/ProblemDashboard/page';
 
 interface User {
   id: string;
@@ -177,11 +178,11 @@ export default function DashboardPage() {
           
           console.log('Stored token validated successfully');
           
-        } catch (error) {
+        } catch (error:unknown) {
           console.error('Stored token validation failed:', error);
           localStorage.removeItem('authToken');
-          
-          if (error.message.includes('expired')) {
+
+          if ((error as Error).message.includes('expired')) {
             setError('Your session has expired. Please login again.');
           } else {
             setError('Invalid authentication data. Please login again.');
@@ -433,49 +434,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {questions.slice(0, 5).map((question) => (
-                  <Link key={question.id} href={`/problems/${question.id}`}>
-                    <div className="flex items-center justify-between p-4 border border-border/50 rounded-lg hover:bg-muted/20 transition-colors cursor-pointer">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="text-sm font-mono text-muted-foreground">#{question.id}</span>
-                          <h3 className="font-medium">{question.title}</h3>
-                          <Badge className={getDifficultyColor(question.difficulty)}>
-                            {question.difficulty}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                          <span>
-                            {question.acceptedSubmissions.toLocaleString()} / {question.totalSubmissions.toLocaleString()} solved
-                          </span>
-                          <div className="flex space-x-1">
-                            {question.tags.slice(0, 3).map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-xs">
-                                {tag}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Solve
-                      </Button>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+            <ProblemsDashboard/>
           </CardContent>
         </Card>
       </div>

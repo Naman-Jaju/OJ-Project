@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/db.ts';
-import User from './user.model.ts'
+import { sequelize } from '../config/db';
 
 interface TokenAttributes {
   id: string;
@@ -30,30 +29,17 @@ Token.init(
     userId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: User,
-        key: 'id',
-      },
     },
     refreshToken: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
     tableName: 'tokens',
     modelName: 'Token',
+    timestamps: true,
   }
 );
 

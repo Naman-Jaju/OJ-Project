@@ -1,10 +1,10 @@
 import express, { Router } from "express";
-import { signupUser, loginUser } from "../controllers/auth.ts";
+import { signupUser, loginUser, getProfile } from "../controllers/auth";
 import passport from "passport";
 import dotenv from "dotenv";
 import "../middleware/passport.ts"
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model.ts";
+import  User  from "../models/user";
 
 dotenv.config();
 
@@ -12,6 +12,8 @@ const router:Router = express.Router();
 
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
+
+router.get('/profile/:username', getProfile)
 
 //console.log(passport._strategies);
 
@@ -22,7 +24,7 @@ router.get('/google',
 
 router.get('/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: '/login' }),
-  function(req, res) {
+  async function(req, res) {
     const user = req.user;
     if (!user) {
       // Handle the case where user is undefined
@@ -33,11 +35,12 @@ router.get('/google/callback',
     console.log("✅ Google login successful");
     console.log("Logged in user:", user);
 
-    const rawUser = user.toJSON();
+     const rawUser = JSON.parse(JSON.stringify(user));//const rawUser = user.toJSON();
 
     if (!rawUser.email) {
       console.error('User missing email:', rawUser);
-      return res.status(400).send('Invalid user data');
+      res.status(400).send('Invalid user data');
+      return;
     }
 
     const token = jwt.sign(

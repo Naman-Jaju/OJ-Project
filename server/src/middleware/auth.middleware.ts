@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import "./passport.ts";
+import "./passport";
 
 export const authenticateJWT = (
   req: Request,

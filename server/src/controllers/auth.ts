@@ -1,8 +1,7 @@
 import { Request, Response} from "express";
-import  User  from "../models/user.model.ts";
-import Token from "../models/token.model.ts";
-import { signupSchema, LoginSchema } from "../utils/schema.ts";
-import { ApiError } from "../utils/ApiError.ts";
+import { User, Token } from "../models/index";
+import { signupSchema, LoginSchema } from "../utils/schema";
+import { ApiError } from "../utils/ApiError";
 import  jwt  from "jsonwebtoken";
 
 
@@ -27,6 +26,7 @@ export const signupUser = async (req:Request, res:Response): Promise<void> => {
         username,
         email,
         password,
+        isActive: true,
         role: "User"
     });
 

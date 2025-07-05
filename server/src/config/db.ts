@@ -1,26 +1,21 @@
-// Configure postgreSQL using sequelize
-import { Sequelize } from "sequelize";
-import  dotenv  from "dotenv";
+// src/config/db.ts (or db.js)
+
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const database_url = process.env.DATABASE_URL;
-
-if (!database_url) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
-
-export const sequelize = new Sequelize(database_url,{
-    dialect: "postgres",
-    dialectOptions: {},
-    logging: false,
-    pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
+export const sequelize = new Sequelize(process.env.DATABASE_URL!, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
     },
-    define: {
-        timestamps: false
-    }
+  },
+  logging: false, // optional
 });
+
+sequelize.authenticate()
+  .then(() => console.log("Connected to NeonDB! 🚀"))
+  .catch(err => console.error("Connection error: ", err));

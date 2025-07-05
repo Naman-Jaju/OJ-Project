@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/db.ts';
+import { sequelize } from '../config/db';
 
 interface ProblemAttributes {
   id: string;

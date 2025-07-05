@@ -2,8 +2,8 @@ import passport from "passport";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as GitHubStrategy,  Profile as GitHubProfile } from 'passport-github2';
 import { Strategy as GoogleStrategy, Profile as GoogleProfile, } from "passport-google-oauth20"
-import User from "src/models/user.model.ts";
-import { ApiError } from "src/utils/ApiError.ts";
+import User from "../models/user";
+import { ApiError } from "../utils/ApiError";
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -44,6 +44,7 @@ passport.use(new GitHubStrategy({
         user = await User.create({
           username: profile.username ?? email.split('@')[0],
           email,
+          isActive: true,
           password: Math.random().toString(36).slice(-8), // Not used, just for schema
           role: "User",
         });
@@ -79,6 +80,7 @@ passport.use(
             email,
             password: Math.random().toString(36).slice(-8), // Not used, just for schema
             role: "User",
+            isActive: true,
           });
         }
 

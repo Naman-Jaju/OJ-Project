@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from '../config/db.ts';
+import { sequelize } from '../config/db';
 import bcrypt from 'bcryptjs';
 
 // Define the attributes for the User model
@@ -8,6 +8,7 @@ interface UserAttributes {
   username: string;
   email: string;
   password: string;
+  isActive: boolean;
   role: 'Admin' | 'User';
   createdAt?: Date;
   updatedAt?: Date;
@@ -21,6 +22,7 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   public username!: string;
   public email!: string;
   public password!: string;
+  public isActive!: boolean;
   public role!: 'Admin' | 'User';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -55,26 +57,21 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    isActive: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
     role: {
       type: DataTypes.ENUM('Admin', 'User'),
       allowNull: false,
       defaultValue: 'User',
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
     },
   },
   {
     sequelize,
     tableName: 'users',
     modelName: 'User',
+    timestamps: true,
     hooks: {
       beforeCreate: async (user: User) => {
         if (user.password) {
