@@ -1,7 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/db";
-import Submission from "./submission";
-import Testcase from "./testcase";
+
 
 interface TestcaseResultAttributes {
   id: string;
