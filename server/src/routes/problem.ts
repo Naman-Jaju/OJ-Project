@@ -1,27 +1,18 @@
-import { Router } from 'express';
+import express, { Router } from "express";
 import {
   getProblems,
   getProblemById,
   createProblem,
   updateProblem,
-  deleteProblem,
-} from '../controllers/problem';
+  deleteProblem
+} from "../controllers/problem";
+import { authenticateJWT } from "../middleware/auth.middleware";
 
-const problemRouter = Router();
+const problemRouter: Router = express.Router();
 
-// GET /api/problems - Get all problems with pagination and filtering
-problemRouter.get('/', getProblems);
+problemRouter.get("/", getProblems);
+problemRouter.get("/:id", getProblemById);
+problemRouter.post("/", authenticateJWT, createProblem);
 
-// GET /api/problems/:id - Get a specific problem by ID
-problemRouter.get('/:id', getProblemById);
-
-// POST /api/problems - Create a new problem (admin only)
-problemRouter.post('/', createProblem);
-
-// PUT /api/problems/:id - Update a problem (admin only)
-problemRouter.put('/:id', updateProblem);
-
-// DELETE /api/problems/:id - Delete a problem (admin only)
-problemRouter.delete('/:id', deleteProblem);
 
 export default problemRouter;

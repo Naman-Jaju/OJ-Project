@@ -1,10 +1,11 @@
 import express, { Router } from "express";
-import { signupUser, loginUser, getProfile } from "../controllers/auth";
+import { signupUser, loginUser, getProfile, logOutUser, getMe } from "../controllers/auth";
 import passport from "passport";
 import dotenv from "dotenv";
 import "../middleware/passport.ts"
 import jwt from "jsonwebtoken";
 import  User  from "../models/user";
+import { authenticateJWT } from "../middleware/auth.middleware";
 
 dotenv.config();
 
@@ -12,8 +13,10 @@ const router:Router = express.Router();
 
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
+router.post("/logout", logOutUser);
+router.post("/me", authenticateJWT, getMe);
+router.get('/profile/:username', getProfile);
 
-router.get('/profile/:username', getProfile)
 
 //console.log(passport._strategies);
 

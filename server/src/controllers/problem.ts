@@ -1,228 +1,157 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { Op } from 'sequelize';
 import Problem from '../models/problem';
+import { ApiError} from '../utils/ApiError';
+import { ApiErrorResponse, ApiResponse } from '../utils/ApiResponse';
+import { any } from 'zod';
 
-interface PaginationQuery {
-  page?: string;
-  limit?: string;
-  search?: string;
-  difficulty?: string;
-  tags?: string;
-  sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+// Get all problems 
+export const getProblems = async(req: Request, res: Response, next: NextFunction) => {
+  try{
+    const { difficulty, page = 1, limit = 10 } = req.query;
+    const where: {difficulty?: string} = {};
+
+    if(difficulty && ["Easy", "Medium", "Hard"].includes(difficulty as string)) {
+        where.difficulty = difficulty as string;
+    }
+
+    const offset = (Number(page) - 1) * Number(limit);
+    
+    // The database query
+     const { rows, count } = await Problem.findAndCountAll({
+      where,                                  // Apply filters
+      offset,                                 // Apply pagination offset
+      limit: Number(limit),                   // Apply pagination limit
+      order: [["createdAt", "DESC"]],         // Order results, newest first
+      attributes: { exclude: ["description", "examples", "constraints"] },
+     });
+
+     // send the success response data
+
+    const responseData = {
+      problems: rows,
+      currentPage: Number(page),
+      totalPages: Math.ceil(count / Number(limit)),
+      totalProblems: count,
+    };
+    new ApiResponse(200, "Problems fetched successfully", responseData).send(res);
+  }
+  catch(error: any){
+    console.log("Error in getProblems", error);
+    new ApiErrorResponse(500, "Failed to fetch problems", [error.message]).send(res);
+  }
 }
 
-export const getProblems = async (req: Request<{}, {}, {}, PaginationQuery>, res: Response) => {
-  try {
-    const {
-      page = '1',
-      limit = '10',
-      search = '',
-      difficulty,
-      tags,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC'
-    } = req.query;
+// get problems by id
 
-    const pageNum = Math.max(1, parseInt(page));
-    const limitNum = Math.min(50, Math.max(1, parseInt(limit))); // Max 50 items per page
-    const offset = (pageNum - 1) * limitNum;
+export const getProblemById = async (req: Request, res: Response) => {
+  try{
+    const { id } =  req.params;
+    const problem = await Problem.findByPk(id);
 
-    // Build where clause
-    const whereClause: any = {
-      isActive: true,
-    };
-
-    // Search by title or ID
-    if (search) {
-      whereClause[Op.or] = [
-        {
-          title: {
-            [Op.iLike]: `%${search}%`,
-          },
-        },
-        {
-          id: {
-            [Op.iLike]: `%${search}%`,
-          },
-        },
-      ];
+    if(!problem){
+      throw new ApiError(404, "Problem not found");
     }
 
-    // Filter by difficulty
-    if (difficulty && ['easy', 'medium', 'hard'].includes(difficulty)) {
-      whereClause.difficulty = difficulty;
-    }
-
-    // Filter by tags
-    if (tags) {
-      const tagArray = tags.split(',').map(tag => tag.trim());
-      whereClause.tags = {
-        [Op.overlap]: tagArray,
-      };
-    }
-
-    // Validate sortBy field
-    const allowedSortFields = ['createdAt', 'title', 'difficulty', 'acceptedSubmissions', 'totalSubmissions'];
-    const sortField = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
-
-    const { count, rows: problems } = await Problem.findAndCountAll({
-      where: whereClause,
-      order: [[sortField, sortOrder]],
-      limit: limitNum,
-      offset,
-      attributes: [
-        'id',
-        'title',
-        'difficulty',
-        'tags',
-        'timeLimit',
-        'memoryLimit',
-        'acceptedSubmissions',
-        'totalSubmissions',
-        'createdAt',
-      ],
-    });
-
-    const totalPages = Math.ceil(count / limitNum);
-
-    res.json({
-      success: true,
-      data: {
-        problems,
-        pagination: {
-          currentPage: pageNum,
-          totalPages,
-          totalItems: count,
-          itemsPerPage: limitNum,
-          hasNextPage: pageNum < totalPages,
-          hasPrevPage: pageNum > 1,
-        },
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching problems:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error:  error,
-    });
+    new ApiResponse(200, "Problem fetched successfully", problem).send(res);
+  }catch(error: any){
+    console.log("Error in getProblemById", error);
+    new ApiErrorResponse(500, "Failed to fetch problem", [error.message]).send(res);
   }
-};
+}
 
-export const getProblemById = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const { id } = req.params;
 
-    const problem = await Problem.findOne({
-      where: {
-        id,
-        isActive: true,
-      },
-    });
+// ADMIN FUNCTIONS
 
-    if (!problem) {
-      return res.status(404).json({
-        success: false,
-        message: 'Problem not found',
-      });
-    }
-
-    res.json({
-      success: true,
-      data: problem,
-    });
-  } catch (error) {
-    console.error('Error fetching problem:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error,
-    });
-  }
-};
-
+// create problem
 export const createProblem = async (req: Request, res: Response) => {
   try {
-    const problemData = req.body;
-
-    const problem = await Problem.create(problemData);
-
-    res.status(201).json({
-      success: true,
-      data: problem,
-      message: 'Problem created successfully',
-    });
-  } catch (error) {
-    console.error('Error creating problem:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error,
-    });
-  }
-};
-
-export const updateProblem = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    const [updatedRowsCount] = await Problem.update(updateData, {
-      where: { id },
-    });
-
-    if (updatedRowsCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Problem not found',
-      });
+    const { title, description, difficulty, tags, examples, constraints, timeLimit, memoryLimit} = req.body;
+    if(
+      !title ||
+      !description ||
+      !difficulty ||
+      !Array.isArray(tags) ||
+      !Array.isArray(examples) || examples.length == 0 ||
+      !Array.isArray(constraints) || constraints.length == 0 
+    ){
+      new ApiErrorResponse(400, "Missing required fields. Ensure title, description, difficulty, tags, examples, and constraints are provided.").send(res); 
     }
 
-    const updatedProblem = await Problem.findByPk(id);
-
-    res.json({
-      success: true,
-      data: updatedProblem,
-      message: 'Problem updated successfully',
-    });
-  } catch (error) {
-    console.error('Error updating problem:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error,
-    });
-  }
-};
-
-export const deleteProblem = async (req: Request<{ id: string }>, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Soft delete by setting isActive to false
-    const [updatedRowsCount] = await Problem.update(
-      { isActive: false },
-      { where: { id } }
-    );
-
-    if (updatedRowsCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'Problem not found',
-      });
+    if(!["Easy", "Medium", "Hard"].includes(difficulty)){
+      new ApiErrorResponse(400, "Invalid difficulty. Difficulty must be 'Easy', 'Medium', or 'Hard'.").send(res);
     }
 
-    res.json({
-      success: true,
-      message: 'Problem deleted successfully',
+    const areExamplesValid = examples.every((ex: {input: string, output: string}) => ex.input && ex.output);
+    if(!areExamplesValid){
+      new ApiErrorResponse(400, "Invalid examples format. Each object in the 'examples' array must have 'input' and 'output' properties.").send(res);
+    }
+    const userId = (req as any).user.id;
+    
+    const problem = await Problem.create({ 
+      title, 
+      description, 
+      difficulty, 
+      tags, 
+      examples, 
+      constraints, 
+      timeLimit, 
+      memoryLimit ,
+      createdBy: userId
     });
-  } catch (error) {
-    console.error('Error deleting problem:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error:  error,
-    });
+
+    new ApiResponse(201, "Problem created successfully", problem).send(res);
+  } catch (error: any) {
+    console.log("Error in createProblem", error);
+    new ApiErrorResponse(500, "Failed to create problem", [error.message]).send(res);
   }
-};
+}
+
+// update problem
+
+export const updateProblem = async (req: Request, res: Response) => {
+  try{
+    const { id } = req.params;
+    const { title, description, difficulty, tags, examples, constraints, timeLimit, memoryLimit } = req.body;
+    const problem = await Problem.findByPk(id);
+
+    if(!problem){
+      throw new ApiError(404, "Problem not found");
+    }
+    // {* TODO: add validations *}
+    if(problem){
+      await problem.update({
+        title: title ?? problem.title,
+        description: description ?? problem.description,
+        difficulty: difficulty ?? problem.difficulty,
+        tags: tags ?? problem.tags,
+        examples: examples ?? problem.examples,
+        constraints: constraints ?? problem.constraints,
+        timeLimit: timeLimit ?? problem.timeLimit,
+        memoryLimit: memoryLimit ?? problem.memoryLimit
+      });
+    }
+    new ApiResponse(200, "Problem updated successfully", problem).send(res);
+  } catch(error : any){
+    console.log("Error in updateProblem", error);
+    new ApiErrorResponse(500, "Failed to update problem", [error.message]).send(res);
+  }
+}
+
+// delete problem
+
+export const deleteProblem = async (req: Request, res: Response) => {
+  try{
+    const { id } = req.params;
+    const problem = await Problem.findByPk(id);
+    if(!problem){
+      throw new ApiError(404, "Problem not found");
+    }
+
+    await problem.destroy();
+    new ApiResponse(200, "Problem deleted successfully", problem).send(res);
+  } catch( error: any){
+    console.log("Error in deleteProblem", error);
+    new ApiErrorResponse(500, "Failed to delete problem", [error.message]).send(res);
+  }
+}

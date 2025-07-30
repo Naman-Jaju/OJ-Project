@@ -17,6 +17,7 @@ interface ProblemAttributes {
   memoryLimit: number;
   acceptedSubmissions: number;
   totalSubmissions: number;
+  createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -39,7 +40,7 @@ class Problem extends Model<ProblemAttributes, ProblemCreationAttributes> implem
   public memoryLimit!: number;
   public acceptedSubmissions!: number;
   public totalSubmissions!: number;
-
+  public createdBy!: string;
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -119,6 +120,10 @@ Problem.init(
         min: 0,
       },
     },
+    createdBy: {
+      type: DataTypes.UUID,
+      allowNull: false
+    }
   },
   {
     sequelize,

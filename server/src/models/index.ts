@@ -61,6 +61,17 @@ TestcaseResult.belongsTo(TestCase, {
   as: "testcase",
 });
 
+User.hasMany(Problem, {
+  foreignKey: 'createdBy',
+  as: 'createdProblems', // user.getCreatedProblems()
+});
+
+// Each Problem belongs to a User who created it
+Problem.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator', // problem.getCreator()
+});
+
 // Initialize associations
 const models = { User, Token, Problem, TestCase, Submission, TestcaseResult };
 
