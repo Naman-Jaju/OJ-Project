@@ -30,17 +30,17 @@ export const policies = {
   },
   problem_submissions: {
     can_view: (actor: any, resource: any) =>
-      // Admin and Moderator can view all submissions for any problem
+      // Admin can view all submissions for any problem
       // Regular users can view submissions (filtered to their own in controller)
-      actor.usertype === 'Admin' || actor.usertype === 'Moderator' || actor.usertype === 'User',
+      actor.usertype === 'Admin'  || actor.usertype === 'User',
   },
   ai_review: {
     can_view: (actor: any, review: any) =>
-      actor.usertype === 'Admin' || actor.usertype === 'Moderator' || actor.id === review.userId,
+      actor.usertype === 'Admin'  || actor.id === review.userId,
     can_edit: (actor: any, review: any) =>
-      actor.usertype === 'Admin' || actor.usertype === 'Moderator' || actor.id === review.userId,
+      actor.usertype === 'Admin'  || actor.id === review.userId,
     can_create: (actor: any) =>
-      actor.usertype === 'Admin' || actor.usertype === 'Moderator' || actor.usertype === 'User',
+      actor.usertype === 'Admin' || actor.usertype === 'User',
   },
 };
 
